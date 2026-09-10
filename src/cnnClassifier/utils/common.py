@@ -14,25 +14,36 @@ import base64
 
 @ensure_annotations
 def read_yaml(path_to_yaml: Path) -> ConfigBox:
-    """reads yaml file and returns
+    """reads yaml file and returns ConfigBox
 
     Args:
-        path_to_yaml (str): path like input
+        path_to_yaml (Path): path to yaml file
 
     Raises:
-        ValueError: if yaml file is empty
-        e: empty file
+        ValueError: if yaml file is empty or invalid
 
     Returns:
         ConfigBox: ConfigBox type
     """
     try:
-        with open(path_to_yaml) as yaml_file:
+        with open(path_to_yaml, encoding="utf-8") as yaml_file:
             content = yaml.safe_load(yaml_file)
+
+            if content is None:
+                raise ValueError(f"YAML file is empty: {path_to_yaml}")
+
+            if not isinstance(content, dict):
+                raise ValueError(
+                    f"YAML file must contain a dictionary, "
+                    f"but got {type(content).__name__}: {content}"
+                )
+
             logger.info(f"yaml file: {path_to_yaml} loaded successfully")
             return ConfigBox(content)
-    except BoxValueError:
-        raise ValueError("yaml file is empty")
+
+    except BoxValueError as e:
+        raise ValueError(f"Invalid YAML structure: {e}")
+
     except Exception as e:
         raise e
     
